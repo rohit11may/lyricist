@@ -1,21 +1,11 @@
-import json
-import numpy as np
-import pandas as pd
-import random
-import requests
-from SpotifyClient import SpotifyClient
-
-from bs4 import BeautifulSoup
-from flask import Flask, request
-from utils import save, load
-from collections import Counter
-from itertools import chain
-from time import sleep
-from langdetect import detect
+from api_clients.GeniusClient import GeniusClient
+from api_clients.SpotifyClient import SpotifyClient
 
 sp = SpotifyClient()
+g = GeniusClient()
 
 
 def start():
     sp.authenticate()
-
+    # print(g.get_lyrics(['hot girl bummer'], [['blackbear']]))
+    # print(sp.get_genres([['0OdUWJ0sBjDrqHygGUXeCF']]))
