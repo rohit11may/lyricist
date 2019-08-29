@@ -75,3 +75,11 @@ class SpotifyClient(spotipy.Spotify):
 
         save(artist_genre_map, GENRE_MAP)
         return all_genres
+
+    def get_top_artists(self, time_range):
+        self.refresh()
+        return self.current_user_top_artists(limit=50, time_range=time_range)['items']
+
+    def get_top_tracks(self, time_range):
+        return self.current_user_top_tracks(limit=50, time_range=time_range)['items']
+

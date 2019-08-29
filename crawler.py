@@ -7,5 +7,7 @@ g = GeniusClient()
 
 def start():
     sp.authenticate()
-    # print(g.get_lyrics(['hot girl bummer'], [['blackbear']]))
+    tracks = sp.get_top_tracks(time_range='long_term')
+
     # print(sp.get_genres([['0OdUWJ0sBjDrqHygGUXeCF']]))
+start()
