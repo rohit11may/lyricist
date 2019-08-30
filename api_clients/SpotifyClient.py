@@ -24,11 +24,11 @@ class SpotifyClient(spotipy.Spotify):
             super().__init__(token_info['access_token'])
 
     def get_saved_tracks(self):
-        self.refresh()
         """
 
         :return: A list of TRACK json objects.
         """
+        self.refresh()
         results = self.current_user_saved_tracks()
         tracks = results['items']
         while results['next']:
@@ -38,12 +38,12 @@ class SpotifyClient(spotipy.Spotify):
         return tracks
 
     def get_audio_features(self, track_ids):
-        self.refresh()
         """
 
         :param track_ids: List of ID strings of all the tracks requested
         :return: A list of AUDIO_FEATURES json objects
         """
+        self.refresh()
         num_tracks = len(track_ids)
         audio_features = []
         step = 50
@@ -52,12 +52,12 @@ class SpotifyClient(spotipy.Spotify):
         return audio_features
 
     def get_genres(self, artist_ids):
-        self.refresh()
         """
 
         :param artist_ids: List of artist ID strings of all the artists requested
         :return: A list of genre lists in the same order as the artists requested
         """
+        self.refresh()
         try:
             artist_genre_map = load(GENRE_MAP)
         except Exception:
@@ -77,9 +77,49 @@ class SpotifyClient(spotipy.Spotify):
         return all_genres
 
     def get_top_artists(self, time_range):
+        """
+
+        :param time_range: 'short_term' - 4w, 'medium_term' - 6m 'long_term' - all time
+        :return: list of ARTIST json objects
+        """
         self.refresh()
         return self.current_user_top_artists(limit=50, time_range=time_range)['items']
 
     def get_top_tracks(self, time_range):
+        """
+
+        :param time_range: 'short_term' - 4w, 'medium_term' - 6m 'long_term' - all time
+        :return: list of TRACK json objects
+        """
+        self.refresh()
         return self.current_user_top_tracks(limit=50, time_range=time_range)['items']
 
+    def get_discover_weekly(self):
+        """
+
+        :return: list of TRACK json objects
+        """
+        self.refresh()
+        playlist_tracks = self.user_playlist(user=USERNAME,
+                                             playlist_id=MY_DISCOVER_WEEKLY,
+                                             fields='tracks')['tracks']['items']
+        return [track['track'] for track in playlist_tracks]
+
+    def get_track_radio(self, track_id, limit=50):
+        """
+
+        :param track_id: id of track to generate radio for
+        :param limit: number of songs to return (max 100)
+        :return: list of TRACK json objects
+        """
+        self.refresh()
+        return self.recommendations(seed_tracks=[track_id], limit=limit)['tracks']
+
+    def get_related_artists(self, artist_id):
+        """
+
+        :param artist_id: id of artist to get related artists for
+        :return: list of ARTIST json objects
+        """
+        self.refresh()
+        return self.artist_related_artists(artist_id)['artists']
