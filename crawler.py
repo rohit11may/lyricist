@@ -14,7 +14,6 @@ g = GeniusClient()
 
 
 def start():
-    nltk.download('wordnet')
     sp.authenticate()
     # tracks = crawl_discover_weekly()
     tracks = load(CRAWLED_TRACKS)
@@ -34,7 +33,7 @@ def start():
     already_recommended.update(next_recommended)
     save(already_recommended, ALREADY_RECOMMENDED)
 
-    sp.add_to_reccomendation_playlist(top[:20]['id'].tolist())
+    sp.add_to_reccomendation_playlist(top['id'].tolist())
     sp.set_reccomendation_playlist_details(description)
 
 
@@ -99,4 +98,5 @@ def get_all_attributes(tracks):
     return df
 
 
-start()
+if __name__ == "__main__":
+    start()

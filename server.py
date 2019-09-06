@@ -13,7 +13,6 @@ def index():
     token_info = sp_oauth.get_cached_token()
 
     if token_info:
-        # crawler.start(token_info['access_token'])
         return "Found cached token!"
     else:
         url = request.url
@@ -21,7 +20,6 @@ def index():
         if code:
             print("Trying to get valid access token from URL...")
             token_info = sp_oauth.get_access_token(code)
-            # crawler.start(token_info['access_token'])
             return "Got new token!"
 
     return login_button()
@@ -36,3 +34,7 @@ def login_button():
 def getSPOauthURI():
     auth_url = sp_oauth.get_authorize_url()
     return auth_url
+
+
+if __name__ == "__main__":
+    app.run()
