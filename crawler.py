@@ -17,26 +17,25 @@ def start():
     nltk.download('wordnet')
     sp.authenticate()
     # tracks = crawl_discover_weekly()
-
     tracks = load(CRAWLED_TRACKS)
-    # model = load("data/model.pkl")
-
     df = get_all_attributes(tracks)
     model = Model(df)
     model.run()
-    # model = load("data/model.pkl")
-    # save(model, "data/model.pkl")
-    top = model.df[model.df['score'] > TOLERANCE][['id', 'score']][:100].sort_values('score', ascending=False)
+    top = model.df[model.df['score'] > TOLERANCE][['id', 'score']].sort_values('score', ascending=False)
+    description = top[:30]['score'].describe()
+    description = "On average like {}%, the top one is {}%, worst is approx {}%.".format(
+        int(100*description['mean']),
+        int(100*description['max']),
+        int(100*description['min']))
+
     next_recommended = top[:30]['id'].tolist()
 
     already_recommended = load(ALREADY_RECOMMENDED)
-    already_recommended = set()
     already_recommended.update(next_recommended)
     save(already_recommended, ALREADY_RECOMMENDED)
 
-    # save(top, TOP_SONGS)
-    # top = load(TOP_SONGS)
     sp.add_to_reccomendation_playlist(top[:20]['id'].tolist())
+    sp.set_reccomendation_playlist_details(description)
 
 
 def crawl_discover_weekly():
@@ -58,10 +57,12 @@ def crawl_discover_weekly():
         crawled_track_ids.update([track['id'] for track in all_radio])
 
     unique_tracks = []
+    already_recommended = load(ALREADY_RECOMMENDED)
+    # already_recommended = set()
     for track in all_tracks:
         if track['id'] in crawled_track_ids:
             crawled_track_ids.remove(track['id'])
-            if track['id'] not in already_saved_track_ids:
+            if track['id'] not in already_saved_track_ids and track['id'] not in already_recommended:
                 unique_tracks.append(track)
 
     save(list(set(unique_tracks)), CRAWLED_TRACKS)

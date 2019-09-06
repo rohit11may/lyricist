@@ -19,7 +19,7 @@ class SpotifyClient(spotipy.Spotify):
         Gets cached token from .spotipyoauthcache and refreshes its own access token using the refresh token.
         """
         cached_token_info = self.sp_oauth.get_cached_token()
-        if self.sp_oauth._is_token_expired(cached_token_info):
+        if self.sp_oauth.is_token_expired(cached_token_info):
             token_info = self.sp_oauth.refresh_access_token(cached_token_info['refresh_token'])
             super().__init__(token_info['access_token'])
 
@@ -138,3 +138,8 @@ class SpotifyClient(spotipy.Spotify):
         self.refresh()
         self.user_playlist_replace_tracks(user=USERNAME, playlist_id=RECC_PLAYLIST,
                                           tracks=track_ids)
+
+    def set_reccomendation_playlist_details(self, details):
+        self.refresh()
+        self.user_playlist_change_details(user=USERNAME, playlist_id=RECC_PLAYLIST,
+                                          description=details)
