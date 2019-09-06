@@ -65,7 +65,7 @@ class GeniusClient():
                 lyrics[key] = extract_lyrics(name, artist[0])
 
             lyrics_list.append(lyrics[key])
-            if i % 10 == 0:
+            if i % 100 == 0:
                 save(lyrics, LYRICS)
 
         save(lyrics, LYRICS)

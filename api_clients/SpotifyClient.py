@@ -115,6 +115,16 @@ class SpotifyClient(spotipy.Spotify):
         self.refresh()
         return self.recommendations(seed_tracks=[track_id], limit=limit)['tracks']
 
+    def get_artist_radio(self, artist_id, limit=50):
+        """
+
+        :param artist_id: id of artist to generate radio for
+        :param limit: number of songs to return (max 100)
+        :return:
+        """
+        self.refresh()
+        return self.recommendations(seed_artists=[artist_id], limit=limit)['tracks']
+
     def get_related_artists(self, artist_id):
         """
 
@@ -123,3 +133,8 @@ class SpotifyClient(spotipy.Spotify):
         """
         self.refresh()
         return self.artist_related_artists(artist_id)['artists']
+
+    def add_to_reccomendation_playlist(self, track_ids):
+        self.refresh()
+        self.user_playlist_replace_tracks(user=USERNAME, playlist_id=RECC_PLAYLIST,
+                                          tracks=track_ids)
