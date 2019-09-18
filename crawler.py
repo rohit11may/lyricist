@@ -15,7 +15,7 @@ g = GeniusClient()
 
 def start():
     sp.authenticate()
-    # tracks = crawl_discover_weekly()
+    tracks = crawl_discover_weekly()
     tracks = load(CRAWLED_TRACKS)
     df = get_all_attributes(tracks)
     model = Model(df)
@@ -27,13 +27,13 @@ def start():
         int(100*description['max']),
         int(100*description['min']))
 
-    next_recommended = top[:30]['id'].tolist()
+    next_recommended = top[:31]['id'].tolist()
 
     already_recommended = load(ALREADY_RECOMMENDED)
     already_recommended.update(next_recommended)
     save(already_recommended, ALREADY_RECOMMENDED)
 
-    sp.add_to_reccomendation_playlist(top['id'].tolist())
+    sp.add_to_reccomendation_playlist(top['id'][:31].tolist())
     sp.set_reccomendation_playlist_details(description)
 
 
@@ -64,7 +64,7 @@ def crawl_discover_weekly():
             if track['id'] not in already_saved_track_ids and track['id'] not in already_recommended:
                 unique_tracks.append(track)
 
-    save(list(set(unique_tracks)), CRAWLED_TRACKS)
+    save(unique_tracks, CRAWLED_TRACKS)
     return unique_tracks
 
 
