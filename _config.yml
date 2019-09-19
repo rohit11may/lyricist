@@ -9,7 +9,7 @@ tagline:             'SpotifyxGenius Taste Profiling'
 description:         "How I deployed my own <a href=\"
 https://open.spotify.com/playlist/0NEdo2eVecBFoETj0JITPd?si=A4Y3IObJS5KkU-ef-VIwkw\">
 playlist</a> generator to recommend me songs I'd like based on their lyrics!"
-url:                 http://github.com/rohit11may/lyricist
+url:                 'http://rohit11may.github.io/lyricist'
 baseurl:             ''
 paginate:            5
 paginate_path:       "page:num"
