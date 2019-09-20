@@ -118,4 +118,58 @@ def extract_lyrics(song_title, artist_name):
   return "NA"
 ```
 
-For now, my dataset was complete. I had the data to test my hypothesis.
+At this point, we have enough data to complete the hypothesis.
+
+# Lyrical Analysis
+Love, break-ups and nostalgia were just some of the themes prevalent in the lyrics of my saved
+songs, from my own observations. I figured that songs discussing themes I was interested in would be
+pretty good predictions!
+
+After some research, I stumbled across [Latent Dirichlet Allocation](
+https://towardsdatascience.com/light-on-math-machine-learning-intuitive-guide-to-latent-dirichlet-allocation-437c81220158),
+explained very intuitively in the linked Medium article. It essentially extracts a defined number of
+_topics_ from a set of documents (songs in this case). A _topic_ is a probability distribution of
+the words in the _vocabulary_ used by the songs. Finally, each song is given a _topic distribution_
+based on its words and which topic they fall under. In this way, I could model the overall theme of
+a song.
+
+Before I could apply LDA, the lyric data needed some pre-processing. 
+
+### Language Filter
+Of the 15000 songs scraped, lyrics were only available for 82% of them. The nature of the problem,
+however, limits the possible languages to only ones I know i.e. English. To filter lyrics by
+language, [langdetect](https://pypi.org/project/langdetect/) did the job perfectly.
+
+```python
+from langdetect import detect
+def lang_detect(text):
+  if text != "NA" and text:
+    try:
+      text = detect(text)
+      return text
+    except Exception:
+      return "NA"
+```
+Applying that function to all the songs left only ~7200 english songs.
+
+### Lemmatization / Stopwords
+Using [gensim](https://radimrehurek.com/gensim/), I tokenized the lyrics (after removing the Genius
+verse tags). Next I removed the stopwords such as _'also', 'have', 'does', 'has', 'had', 'when'_, 
+etc. Finally, to avoid lyrics like _'love'_ and _'loving'_ having different meanings, I lemmatized
+the lyrics to reduce every word to its root form.
+
+```python
+import gensim
+stemmer = SnowballStemmer("english")
+
+def lemmatize_stemming(text):
+  return stemmer.stem(WordNetLemmatizer().lemmatize(text, pos='v'))
+
+def preprocess(text):
+  result = []
+  text = re.sub('\[.*\]', '', text)
+  for token in gensim.utils.simple_preprocess(text):
+    if token not in gensim.parsing.preprocessing.STOPWORDS and len(token) > 3:
+        result.append(lemmatize_stemming(token))
+  return result
+```
