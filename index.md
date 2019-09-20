@@ -34,35 +34,88 @@ If the liked songs **clustered** in the space of all songs, it would imply that 
 similarities in their lyrics compared to the rest and therefore it would be possible to predict
 whether I liked one based on it's lyrics!
 
-## Using the Spotify API
+# Creating a Dataset
 
-What was it specifically about the lyrics that made me like a song?
+Of the various lyric sources available, I decided to use the 
+[Genius API](https://docs.genius.com/) due to its size, and obviously the [Spotify
+API](https://developer.spotify.com/) for all other track information.
 
- - meaning of a line, verse or the song overall
- - overall theme of song
- - rhyme scheme (if any)
+### Collecting Track Details
+Getting a sample of liked songs was to simply pluck the **Liked Songs** from my Spotify library.
+Collecting disliked songs is more difficult. I had to make sure that the sample:
+  - Included songs of all genres to eliminate bias
+  - Were mostly, if not all, songs I _actually disliked_.
 
-{% highlight js %}
-// Example can be run directly in your JavaScript console
+Since there was definitely no existing list of these songs I had access to, I took a probabilistic
+approach. From the list of all possible genres, I sampled 5 at a time. Then, I passed that list as
+the seed to generate a **Spotify Radio** (50 tracks), limiting the '_instrumentalness_' of the songs 
+in the radio to a value which filters out lyricless songs.  
 
-// Create a function that takes two arguments and returns the sum of those arguments
-var adder = new Function("a", "b", "return a + b");
+```python
+import Spotipy as sp 
+# Setup Spotipy...  
 
-// Call the function
-adder(2, 6);
-subtracter(3,6);
-// > 8
-{% endhighlight %}
+genre_seeds = sp.recommendation_genre_seeds()
+all_tracks = {}
+target_total = 15000
 
-# Scraping
-## Lyrics
-Some lyrics
-## Songs
-Some songs
-# Preparation
-## t-SNE
-TSNE
-## PCA
-PCA
-# Model
-# Deploy
+# Scrape songs as long as target total is not reached
+while len(all_items.keys()) <= target_total:
+  recc = sp.recommendations(
+      seed_genres = random.sample(genre_list, 5),
+      max_instrumentalness = 0.35,
+      limit=50
+  )
+  for item in recc['tracks']:
+    all_items[item['id']] = item
+```
+
+Thus, I scraped **15000** track details from Spotify, equally representing all the genres. I made
+the assumption that I disliked the large majority of these songs based on the fact that I am much 
+more likely to dislike any given song than to like it.
+
+### Scraping Lyrics
+For each song, I requested the lyrics by _song title_ and _song name_.
+```python
+import requests
+def request_song_info(song_title, artist_name):
+  base_url = 'https://api.genius.com'
+  headers = {'Authorization': 'Bearer ' + token}
+  search_url = base_url + '/search'
+  data = {'q': song_title + ' ' + artist_name}
+  response = requests.get(search_url, data=data, headers=headers)
+  return response
+```
+
+However, this only gave me a link to the page containing the lyrics. I still had to scrape them! If
+the lyrics were not available, I returned `'NA'`.
+```python
+import beautifulsoup
+def scrape_song_url(url):
+  page = requests.get(url)
+  html = BeautifulSoup(page.text, 'html.parser')
+  lyrics = html.find('div', class_='lyrics').get_text()
+  return lyrics
+
+def extract_lyrics(song_title, artist_name):
+  # Search for matches in the request response
+  response = request_song_info(song_title, artist_name)
+  json = response.json()
+  remote_song_info = None
+  
+  if json:
+    for hit in json['response']['hits']:
+      name = hit['result']['primary_artist']['name']
+      if artist_name.lower() in name.lower():
+        remote_song_info = hit
+        break
+    
+    # Extract lyrics from URL if the song was found
+    if remote_song_info:
+      song_url = remote_song_info['result']['url']
+      return scrape_song_url(song_url)
+  
+  return "NA"
+```
+
+For now, my dataset was complete. I had the data to test my hypothesis.
