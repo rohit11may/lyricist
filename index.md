@@ -193,7 +193,7 @@ lda_model =  gensim.models.LdaMulticore(bow_corpus,
                                   workers = 3)
 ```
 
-At this point we can take a sneak peak of the topics it found!
+At this point we can take a sneak peak of the topics it generated:
 
 **nostalgia** | come, burn, time, go, young, hous, live, say, want <br>
 **love** | feel, come, love, heart, think, know, good, eye, break, fall <br>
@@ -210,7 +210,7 @@ I named the topics based on the top ten most probable words for each topic.
 
 ### Generate the topic distributions
 Finally, using the LDA model, I generate a distribution of the 10 topics present in the song, for
-each song.
+each song. Any given song may be *60% topic 1, 30% topic 2 and 10% topic 8*.
 ```python
 def get_topic_dist(song, lda_model, dictionary, num_topics):
   topic_dist = [0]*num_topics
@@ -221,4 +221,19 @@ def get_topic_dist(song, lda_model, dictionary, num_topics):
     topic_dist[index] = score
   return topic_dist
 ```
+
+# Visualisation
+Finally, for each song there is a meaningful vector (10 probabilities for 10 topics) defining what 
+the song's lyrics represent. To visually see if they cluster, I have to represent the 10D data in 
+2 or 3 dimensions. Unable to find appropriate parameters for a t-SNE plot, I used
+[PCA](https://medium.com/@aptrishu/understanding-principle-component-analysis-e32be0253ef0) to 
+reduce the 10 dimensions to 3, with the cumulative explained variance equalling *51%* i.e. the
+resultant data lost *49%* of the information in the original 10D data. However, this was enough to
+produce a useful result! 
+
+The **liked songs are marked in blue** and the **disliked songs are marked in red**.
+
+{% include streamablePlayer.html %}
+
+It is evident that there is some **_clear clustering in the liked songs!_**
 
