@@ -1,5 +1,5 @@
 # Lyricis-based playlist generation
-See the full post here: [**rohit11may.github.io/lyricist/**]()
+See the full post here: [**http://rohit11may.github.io/lyricist/**](http://rohit11may.github.io/lyricist/)
 ---
 
 Quite often I'd find myself listening to new music and not enjoying the melody too much, but then it 
