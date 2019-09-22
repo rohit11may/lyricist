@@ -173,3 +173,52 @@ def preprocess(text):
         result.append(lemmatize_stemming(token))
   return result
 ```
+
+### Topic Modeling with LDA
+Having converted the lyrics string into a list of useful tokens, we can now apply LDA. First, using
+gensim, I create a dictionary of all the unique words from all downloaded lyrics and remove all
+words that occur in less than 20 songs and more than 20% of the songs. This leaves around 2000
+words which form the useful part of the vocabulary; ready for topic modeling. 
+
+```python
+import gensim
+all_processed_lyrics = df['processed_lyrics'].tolist()
+dictionary = gensim.corpora.Dictionary(all_processed_lyrics)
+dictionary.filter_extremes(no_below=20, no_above=0.2)
+bow_corpus = [dictionary.doc2bow(lyric) for lyric in all_processed_lyrics]
+lda_model =  gensim.models.LdaMulticore(bow_corpus, 
+                                  num_topics = 10, 
+                                  id2word = dictionary,                                    
+                                  passes = 15,
+                                  workers = 3)
+```
+
+At this point we can take a sneak peak of the topics it found!
+
+**nostalgia** | come, burn, time, go, young, hous, live, say, want <br>
+**love** | feel, come, love, heart, think, know, good, eye, break, fall <br>
+**desire** | want, babi, know, wanna, girl, yeah, like, caus, leav, need <br>
+**party** | gonna, night, danc, home, song, rock, parti, drink, everybodi, tonight <br>
+**night life** | sing, light, kill, boom, look, like, blue, life, rain, littl <br>
+**break-up** | like, world, watch, heart, break, breath, leav, cold, fall, live <br>
+**lust** | love, babi, come, right, girl, shake, need, bring, know <br>
+**explicit** | yeah, like, fuck, bitch, shit, n\*\*\*a, know, money, caus, gotta <br>
+**more love?** | yeah, love, know, like, tell, thing, wish, need, life, think <br>
+**recovery** | know, time, caus, mind, away, need, lose, like, wait, hold
+
+I named the topics based on the top ten most probable words for each topic.
+
+### Generate the topic distributions
+Finally, using the LDA model, I generate a distribution of the 10 topics present in the song, for
+each song.
+```python
+def get_topic_dist(song, lda_model, dictionary, num_topics):
+  topic_dist = [0]*num_topics
+  bow_vector = dictionary.doc2bow(song)
+  topic_scores = sorted(lda_model[bow_vector], 
+                        key=lambda tup: -1*tup[1])
+  for index, score in topic_scores:
+    topic_dist[index] = score
+  return topic_dist
+```
+
