@@ -223,9 +223,9 @@ def get_topic_dist(song, lda_model, dictionary, num_topics):
 ```
 
 # Visualisation
-Finally, for each song there is a meaningful vector (10 probabilities for 10 topics) defining what 
-the song's lyrics represent. To visually see if they cluster, I have to represent the 10D data in 
-2 or 3 dimensions. Unable to find appropriate parameters for a t-SNE plot, I used
+For each song there is a meaningful vector (10 probabilities for 10 topics) defining what the song's
+lyrics represent. To visually see if they cluster, I have to represent the 10D data in 2 or 3 
+dimensions. Unable to find appropriate parameters for a t-SNE plot, I used
 [PCA](https://medium.com/@aptrishu/understanding-principle-component-analysis-e32be0253ef0) to 
 reduce the 10 dimensions to 3, with the cumulative explained variance equalling *51%* i.e. the
 resultant data lost *49%* of the information in the original 10D data. However, this was enough to
@@ -235,5 +235,78 @@ The **liked songs are marked in blue** and the **disliked songs are marked in re
 
 {% include streamablePlayer.html %}
 
-It is evident that there is some **_clear clustering in the liked songs!_**
+It is evident that there is some **_clear clustering in the liked songs!_** My lyrical taste does
+have a distinct pattern and I can probably use this type of model to classify new songs, so I
+thought why not? 
+
+# Building a Classifier
+My goal was to build a recommendation playlist which operated similar to Discover Weekly and Release
+Radar in that it was updated weekly automatically with fresh picks. 
+
+### Additional Acoustic Details
+Using the Spotify API, I scraped some pre-computed acoustic information for each track readily 
+available:
+
+**key** | Estimated overall key of track. <br>
+**mode** | Major or minor? <br>
+**acousticness** | A confidence measure from `0.0` to `1.0` of whether the track is acoustic. <br>
+**danceabilty** | How suitable a track is for dancing; `0.0` is least danceable, `1.0` is most. <br>
+**energy** | Measure of intensity and activity, high intensity tracks feel fast and loud. <br>
+**instrumentalness** | Predicts whether a track contains no vocals. <br>
+**liveness** | Detects the presence of an audience in the recording. <br>
+**loudness** |  Overall loudness in dB. <br>
+**speechiness** |  Detects the presence of spoken words.<br>
+**valence** |  A measure of the musical positiveness conveyed by the track. <br>
+**tempo** |  Overall tempo of track in BPM.
+
+### Solving Dataset Imbalance
+The number of samples for *liked songs* is far fewer than the *disliked songs*; a model will learn 
+to bet on the class with more samples (dislike), since it is much more likely that a song is of 
+this class, thus reducing the number of true positives. With around **1000 liked songs** and 
+**7200 disliked songs**, I had a few options:
+
+  1. Use a [one-class
+SVM](https://stats.stackexchange.com/questions/99162/what-is-one-class-svm-and-how-does-it-work).
+  2. Reduce the number of disliked songs to be the same as the liked songs.
+  3. Binge-listen to music to increase the number of liked samples at least a little bit.
+  4. Synthetically generate similar samples to the liked songs.
+
+Realistically, without sacrificing quality (option 2) and time (option 3), I was left with 2
+choices. I decided to synthetically generate samples becuase I know that my taste constantly varies.
+Generating new samples may do a good job at compensating for taste changes, as the _liked songs_ 
+class will have a greater variance; at the cost of confidence in the labels (some generated samples
+may be of the _disliked songs_ class).
+
+Using
+[imbalanced-learn](https://imbalanced-learn.readthedocs.io/en/stable/over_sampling.html#from-random-over-sampling-to-smote-and-adasyn)
+for **KMeans SMOTE over-sampling**, I oversampled the _liked songs_ class to be the same as the
+disliked songs class. 
+```python
+from imblearn.over_sampling import KMeansSMOTE
+def resample_df(df):
+  df = df.copy()
+  clustering = True
+  t = 0.5
+  while clustering:
+    try:
+      smote = KMeansSMOTE(cluster_balance_threshold=t)
+      X_resampled, y_resampled = smote.fit_resample(
+                  df.drop('label', axis=1), 
+                  df['label'])
+      clustering = False
+    except Exception:
+      t -= 0.01
+    if t < 0: return None
+       
+  resampled_df = pd.DataFrame(X_resampled)
+  resampled_df['label'] = y_resampled
+  return resampled_df
+```
+Applying PCA to the new dataset (39% cumulative explained variance) gave this
+3D plot:
+![PCA plot of oversampled songs](https://i.ibb.co/vcLv6jS/image.png)
+Importantly, there is still a cluster.
+
+### Training a Deep Neural Net
+To be continued...
 
