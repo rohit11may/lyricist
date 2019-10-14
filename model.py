@@ -69,7 +69,7 @@ class Model:
             get_topic_dist, args=(lda_model, dictionary, NUM_TOPICS,))
         df[topic_headers] = pd.DataFrame(topic_columns.values.tolist(), index=df.index)
         print("Generated topic distributions...")
-        df.drop(['lyrics', 'language', 'processed_lyrics'], axis=1, inplace=True)
+        df.drop(['lyrics', 'language', 'name', 'processed_lyrics'], axis=1, inplace=True)
 
         scaler = MinMaxScaler()
         features = list(set(df.columns.tolist()) - {'id'})

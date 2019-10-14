@@ -16,16 +16,22 @@ g = GeniusClient()
 def start():
     sp.authenticate()
     tracks = crawl_discover_weekly()
-    tracks = load(CRAWLED_TRACKS)
     df = get_all_attributes(tracks)
     model = Model(df)
     model.run()
     top = model.df[model.df['score'] > TOLERANCE][['id', 'score']].sort_values('score', ascending=False)
-    description = top[:30]['score'].describe()
+    description = top[:31]['score'].describe()
     description = "On average like {}%, the top one is {}%, worst is approx {}%.".format(
         int(100*description['mean']),
         int(100*description['max']),
         int(100*description['min']))
+
+    print(description)
+    print("-"*20)
+    for index, row in top[:31].iterrows():
+      name = df[df['id'] == row['id']]['name']
+      print("{}, {}".format(name, row['score']))
+    print("-"*20)
 
     next_recommended = top[:31]['id'].tolist()
 
@@ -74,7 +80,7 @@ def get_all_attributes(tracks):
                     'explicit', 'external_ids', 'external_urls', 'href',
                     'is_local', 'preview_url', 'track_number', 'type',
                     'uri', 'analysis_url', 'time_signature', 'uri',
-                    'track_href', 'speechiness', 'name', 'artists',
+                    'track_href', 'speechiness', 'artists',
                     'popularity', 'mode']
 
     for track in tracks:
