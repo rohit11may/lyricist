@@ -1,0 +1,2 @@
+MAILTO=rp3317
+50 22 * * 2 PYTHONPATH=/home/rp3317/.local/lib/python3.6/site-packages bash /home/rp3317/cronjobs/lyricist.sh

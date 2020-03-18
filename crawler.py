@@ -9,6 +9,7 @@ from config import CRAWLED_TRACKS, CRAWLED_AUDIO_FEATURES, CRAWLED_LYRICS, TOLER
 from model import Model
 from utils import save, load
 
+nltk.data.path.append('./nltk_data/')
 sp = SpotifyClient()
 g = GeniusClient()
 
@@ -16,6 +17,7 @@ g = GeniusClient()
 def start():
     sp.authenticate()
     tracks = crawl_discover_weekly()
+    # tracks = load(CRAWLED_TRACKS)
     df = get_all_attributes(tracks)
     model = Model(df)
     model.run()
@@ -39,12 +41,13 @@ def start():
     already_recommended.update(next_recommended)
     save(already_recommended, ALREADY_RECOMMENDED)
 
+    sp.authenticate()
     sp.add_to_reccomendation_playlist(top['id'][:31].tolist())
     sp.set_reccomendation_playlist_details(description)
 
 
 def crawl_discover_weekly():
-    crawled_track_ids = set()
+    crawled_track_ids = set() 
     all_tracks = []
     already_saved_track_ids = [track['id'] for track in sp.get_saved_tracks()]
     discover_weekly = sp.get_discover_weekly()
